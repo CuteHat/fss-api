@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "peer.lobby.limit",
+      "type": "java.lang.String",
+      "description": "maximum number of peers that can be connected at the same time."
+    }
+  ]
+}

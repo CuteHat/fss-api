@@ -1,0 +1,16 @@
+sequenceDiagram
+    Note over Client,API: ...Skipping connection establishment
+    Client->>API: Join request
+    API->>API: Validate request
+    alt Request is not valid
+        API-->>Client: respond with error and terminate connection
+    end
+    API->>LobbyService: Check capacity
+    alt Lobby is full
+        LobbyService-->>API: lobby is full
+        API-->>Client: Deny request, terminate session
+    else
+        LobbyService-->>API: Respond with client token
+        API->>API: Store client token in session properties
+        API-->>Client: OK
+    end

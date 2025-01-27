@@ -1,0 +1,27 @@
+sequenceDiagram
+    Note over SENDER,API: Skipping connection establishment
+    SENDER->>API: file send request to peer X
+    alt SENDER is not the lobby
+        API-->>SENDER: terminate request
+    end
+    alt X is not in the lobby
+        API-->>SENDER: terminate request
+    end
+    API-->API: Persist transfer object
+    API->>RECEIVER: SENDER wants to send you the file, accept ?
+    alt SENDER discards
+        RECEIVER-->>API: nope
+        API-->>API: remove transfer object
+        API-->>SENDER: Request discarded
+    end
+    RECEIVER-->>API: ACK
+    API-->>SENDER: OK
+    loop Transfer loop
+        SENDER->>API: Send file chunk
+        API->>RECEIVER: Send file chunk
+        RECEIVER->>RECEIVER: Store file chunk
+        RECEIVER-->>API: ACK
+        API->>SENDER: ACK
+    end
+    API->>API: remove transfer object
+    RECEIVER->>RECEIVER: Assemble file
