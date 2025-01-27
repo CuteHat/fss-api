@@ -1,7 +1,7 @@
 package com.example.fssapi.service;
 
 import com.example.fssapi.model.JoinPayload;
-import com.example.fssapi.model.Peer;
+import com.example.fssapi.persistence.entity.Peer;
 import com.example.fssapi.model.PeerDTO;
 import com.example.fssapi.model.SSEEventName;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +27,7 @@ import static com.example.fssapi.util.LobbyUserProperties.PEER_ID;
 @RequiredArgsConstructor
 public class LobbyServiceFacade {
     private final LobbyService lobbyService;
+    private final WebSocketConnectionManager connectionManager;
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     public void handleOpenConnection(WebSocketSession session) {
@@ -36,6 +37,7 @@ public class LobbyServiceFacade {
     public void handleJoin(JoinPayload joinPayload, WebSocketSession session) {
         Peer joinedPeer = lobbyService.join(joinPayload.getNickname());
         session.getAttributes().put(PEER_ID.name(), joinedPeer.getId());
+        connectionManager.add(session);
     }
 
     public void handleLeave(WebSocketSession session) {
@@ -44,6 +46,7 @@ public class LobbyServiceFacade {
             UUID id = (UUID) session.getAttributes().get(PEER_ID.name());
             lobbyService.leave(id);
         }
+        connectionManager.remove(session);
         try {
             session.close();
         } catch (IOException e) {

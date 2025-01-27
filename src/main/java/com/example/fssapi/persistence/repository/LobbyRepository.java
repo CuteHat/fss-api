@@ -1,6 +1,6 @@
-package com.example.fssapi.repository;
+package com.example.fssapi.persistence.repository;
 
-import com.example.fssapi.model.Peer;
+import com.example.fssapi.persistence.entity.Peer;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +21,16 @@ public class LobbyRepository {
         return connectedPeers;
     }
 
-    public int getCurrentSize(){
+    public Peer getById(UUID id) {
+        for (Peer peer : connectedPeers) {
+            if (peer.getId().equals(id)) {
+                return peer;
+            }
+        }
+        return null;
+    }
+
+    public int getCurrentSize() {
         return connectedPeers.size();
     }
 
@@ -42,11 +51,6 @@ public class LobbyRepository {
     }
 
     public boolean containsById(UUID id) {
-        for (Peer peer : connectedPeers) {
-            if (peer.getId().equals(id)) {
-                return true;
-            }
-        }
-        return false;
+        return getById(id) != null;
     }
 }

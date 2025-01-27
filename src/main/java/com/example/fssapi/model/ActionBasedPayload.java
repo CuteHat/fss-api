@@ -6,5 +6,5 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @FieldNameConstants
 public class ActionBasedPayload {
-    private LobbyAction action;
+    private FSSAction action;
 }

@@ -8,9 +8,14 @@ import lombok.NoArgsConstructor;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@AllArgsConstructor
 @NoArgsConstructor
 public class JoinPayload extends ActionBasedPayload {
     @NotEmpty
     private String nickname;
+
+    public JoinPayload(String nickname) {
+        this.setAction(FSSAction.JOIN);
+        this.nickname = nickname;
+    }
+
 }

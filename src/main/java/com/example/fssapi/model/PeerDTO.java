@@ -1,5 +1,6 @@
 package com.example.fssapi.model;
 
+import com.example.fssapi.persistence.entity.Peer;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

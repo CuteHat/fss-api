@@ -3,6 +3,7 @@ package com.example.fssapi.controller.ws;
 import com.example.fssapi.config.FSSWebSocketHandler;
 import com.example.fssapi.model.JoinPayload;
 import com.example.fssapi.service.LobbyServiceFacade;
+import com.example.fssapi.service.WebSocketConnectionManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,7 @@ import org.springframework.web.socket.WebSocketSession;
 @Slf4j
 public class FSSEndpoint extends FSSWebSocketHandler {
     private final LobbyServiceFacade lobbyServiceFacade;
+    private final WebSocketConnectionManager webSocketConnectionManager;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {

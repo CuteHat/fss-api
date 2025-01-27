@@ -1,4 +1,4 @@
-package com.example.fssapi.model;
+package com.example.fssapi.persistence.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

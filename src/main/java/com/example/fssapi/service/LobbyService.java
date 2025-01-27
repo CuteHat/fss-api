@@ -1,7 +1,7 @@
 package com.example.fssapi.service;
 
-import com.example.fssapi.model.Peer;
-import com.example.fssapi.repository.LobbyRepository;
+import com.example.fssapi.persistence.entity.Peer;
+import com.example.fssapi.persistence.repository.LobbyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -38,5 +38,13 @@ public class LobbyService {
 
     public Set<Peer> getConnectedPeers() {
         return lobbyRepository.getConnectedPeers();
+    }
+
+    public boolean isConnectedById(UUID id) {
+        return lobbyRepository.containsById(id);
+    }
+
+    public Peer getById(UUID id) {
+        return lobbyRepository.getById(id);
     }
 }

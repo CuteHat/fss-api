@@ -2,8 +2,10 @@ package com.example.fssapi.config;
 
 import com.example.fssapi.model.ActionBasedPayload;
 import com.example.fssapi.model.JoinPayload;
-import com.example.fssapi.model.LobbyAction;
+import com.example.fssapi.model.FSSAction;
 import com.example.fssapi.exception.ClientInformingException;
+import com.example.fssapi.model.TransferRequestPayload;
+import com.example.fssapi.model.TransferResponsePayload;
 import com.example.fssapi.validation.JakartaValidationUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,7 +27,7 @@ public abstract class FSSWebSocketHandler extends AbstractWebSocketHandler {
         String payload = message.getPayload();
         try {
             JsonNode rootNode = objectMapper.readTree(payload);
-            LobbyAction action = LobbyAction.valueOf(rootNode.get(ActionBasedPayload.Fields.action).asText());
+            FSSAction action = FSSAction.valueOf(rootNode.get(ActionBasedPayload.Fields.action).asText());
             ActionBasedPayload validatedPayload = getValidatedPayload(action, payload);
             switch (action) {
                 case JOIN:
@@ -34,16 +36,20 @@ public abstract class FSSWebSocketHandler extends AbstractWebSocketHandler {
                 case LEAVE:
                     handleLeave(session);
                     break;
+                case REQUEST_TRANSFER:
+                    handleTransferRequest(session, (TransferRequestPayload) validatedPayload);
+                    break;
+                case RESPOND_TO_TRANSFER:
+                    handleTransferResponse(session, (TransferResponsePayload) validatedPayload);
+                    break;
                 default:
                     session.sendMessage(new TextMessage("invalid action"));
                     session.close();
             }
-        }
-        catch (ClientInformingException clientInformingException) {
+        } catch (ClientInformingException clientInformingException) {
             session.sendMessage(new TextMessage(clientInformingException.getMessage()));
             session.close();
-        }
-        catch (Exception exception) {
+        } catch (Exception exception) {
             log.error("error parsing received message, closing connection", exception);
             session.close();
         }
@@ -54,13 +60,13 @@ public abstract class FSSWebSocketHandler extends AbstractWebSocketHandler {
         System.out.println("test");
     }
 
-    public ActionBasedPayload getValidatedPayload(LobbyAction action, String payload) {
+    public ActionBasedPayload getValidatedPayload(FSSAction action, String payload) {
         ActionBasedPayload actionBasedPayload = getParsedPayload(action, payload);
         JakartaValidationUtil.throwIfViolations(actionBasedPayload);
         return actionBasedPayload;
     }
 
-    public ActionBasedPayload getParsedPayload(LobbyAction action, String payload) {
+    public ActionBasedPayload getParsedPayload(FSSAction action, String payload) {
         Objects.requireNonNull(action, "Action cannot be null");
         Class<? extends ActionBasedPayload> targetClass = action.getPayloadClass();
         if (targetClass == null) {
@@ -78,4 +84,8 @@ public abstract class FSSWebSocketHandler extends AbstractWebSocketHandler {
     protected abstract void handleJoin(WebSocketSession session, JoinPayload joinMessage);
 
     protected abstract void handleLeave(WebSocketSession session);
+
+    protected abstract void handleTransferRequest(WebSocketSession session, TransferRequestPayload transferRequestPayload);
+
+    protected abstract void handleTransferResponse(WebSocketSession session, TransferResponsePayload transferResponsePayload);
 }
