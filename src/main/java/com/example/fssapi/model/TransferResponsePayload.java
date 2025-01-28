@@ -15,16 +15,11 @@ public class TransferResponsePayload extends ActionBasedPayload {
 
     @NotNull
     private UUID transferId;
+    @NotNull
+    private Boolean accept;
 
     public TransferResponsePayload(FSSAction fssAction, UUID transferId) {
         this.setAction(fssAction);
         this.transferId = transferId;
-    }
-
-    public void setAction(@NotNull FSSAction fssAction) {
-        if (!fssAction.name().contains("TRANSFER")) {
-            throw new IllegalArgumentException("Invalid fssAction");
-        }
-        super.setAction(fssAction);
     }
 }

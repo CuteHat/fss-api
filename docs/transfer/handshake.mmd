@@ -7,11 +7,11 @@ sequenceDiagram
     alt X is not in the lobby
         API-->>SENDER: terminate request
     end
-    API-->API: Persist transfer object
+    API-->API: Persist transferEntity object
     API->>RECEIVER: SENDER wants to send you the file, accept ?
     alt SENDER discards
         RECEIVER-->>API: nope
-        API-->>API: remove transfer object
+        API-->>API: remove transferEntity object
         API-->>SENDER: Request discarded
     end
     RECEIVER-->>API: ACK
@@ -23,5 +23,5 @@ sequenceDiagram
         RECEIVER-->>API: ACK
         API->>SENDER: ACK
     end
-    API->>API: remove transfer object
+    API->>API: remove transferEntity object
     RECEIVER->>RECEIVER: Assemble file

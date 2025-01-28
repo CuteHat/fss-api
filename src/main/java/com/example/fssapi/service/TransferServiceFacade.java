@@ -1,13 +1,16 @@
 package com.example.fssapi.service;
 
-import com.example.fssapi.exception.ClientInformingException;
-import com.example.fssapi.model.PeerDTO;
-import com.example.fssapi.model.TransferNotificationDTO;
+import com.example.fssapi.model.TransferRequestNotification;
 import com.example.fssapi.model.TransferRequestPayload;
-import com.example.fssapi.persistence.entity.Peer;
+import com.example.fssapi.model.TransferResponseNotification;
+import com.example.fssapi.model.TransferResponsePayload;
+import com.example.fssapi.persistence.entity.PeerEntity;
+import com.example.fssapi.persistence.entity.TransferEntity;
 import com.example.fssapi.util.LobbyUserProperties;
+import com.example.fssapi.util.SessionUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,26 +29,19 @@ public class TransferServiceFacade {
     private final TransferService transferService;
     private final LobbyService lobbyService;
 
+    @Transactional
     public void initiateTransfer(TransferRequestPayload requestPayload, WebSocketSession session) {
-        UUID senderId = extractSender(session);
+        UUID senderId = SessionUtils.extractPeerFromSession(session);
+        PeerEntity senderPeer = lobbyService.findById(senderId);
+        PeerEntity receiver = lobbyService.findById(requestPayload.getDestinationId());
 
-        if (!lobbyService.isConnectedById(senderId)) {
-            throw new ClientInformingException("Connect to lobby first");
-        }
-        Peer senderPeer = lobbyService.getById(senderId);
+        // check connectivity with destination
+        connectionManager.getSessionByPeerId(requestPayload.getDestinationId());
 
-        if (!lobbyService.isConnectedById(requestPayload.getDestinationId())) {
-            throw new ClientInformingException("Destination is not connected to the lobby");
-        }
-
-        if (!connectionManager.peerIsConnectedById(requestPayload.getDestinationId())) {
-            throw new ClientInformingException("Destination is not connected");
-        }
-
-        transferService.create(senderId, requestPayload.getDestinationId());
+        TransferEntity transferEntity = transferService.create(senderPeer, receiver, requestPayload.getFilename(), requestPayload.getFilesize());
 
         WebSocketSession destinationSession = connectionManager.getSessionByPeerId(requestPayload.getDestinationId());
-        TransferNotificationDTO transferDTO = new TransferNotificationDTO(senderId, senderPeer.getNickname(), requestPayload.getFilename(), requestPayload.getSize());
+        TransferRequestNotification transferDTO = TransferRequestNotification.from(transferEntity);
         try {
             String serializedMessage = objectMapper.writeValueAsString(transferDTO);
             destinationSession.sendMessage(new TextMessage(serializedMessage, true));
@@ -58,11 +54,31 @@ public class TransferServiceFacade {
         }
     }
 
-    public UUID extractSender(WebSocketSession session) {
-        Object peerIdObject = session.getAttributes().get(LobbyUserProperties.PEER_ID.name());
-        if (peerIdObject == null) {
-            throw new IllegalArgumentException("Peer ID not found");
+    // Maybe I should avoid connection checks here and instead check the connection only when sending actual data
+    @Transactional
+    public void handleTransferResponse(TransferResponsePayload responsePayload, WebSocketSession session) {
+        TransferEntity transferEntity = transferService.findById(responsePayload.getTransferId());
+        PeerEntity receiver = transferEntity.getReceiver();
+        PeerEntity sender = transferEntity.getSender();
+        if (!receiver.getId().equals(SessionUtils.extractPeerFromSession(session))) {
+            throw new RuntimeException("Receiver does not belong to this transfer");
         }
-        return (UUID) peerIdObject;
+
+        transferEntity = transferService.setResponse(transferEntity, responsePayload.getAccept());
+        TransferResponseNotification transferResponseNotification = TransferResponseNotification.fromEntity(transferEntity);
+
+        WebSocketSession senderSession = connectionManager.getSessionByPeerId(sender.getId());
+        try {
+            senderSession.sendMessage(new TextMessage(
+                    objectMapper.writeValueAsString(transferResponseNotification)
+            ));
+        } catch (JsonProcessingException e) {
+            log.error("unable to serialize transferDTO", e);
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            log.error("unable to send message to destination", e);
+            throw new RuntimeException(e);
+        }
     }
+
 }

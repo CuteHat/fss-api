@@ -1,7 +1,7 @@
 package com.example.fssapi.service;
 
 import com.example.fssapi.model.JoinPayload;
-import com.example.fssapi.persistence.entity.Peer;
+import com.example.fssapi.persistence.entity.PeerEntity;
 import com.example.fssapi.model.PeerDTO;
 import com.example.fssapi.model.SSEEventName;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +12,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -35,7 +36,7 @@ public class LobbyServiceFacade {
     }
 
     public void handleJoin(JoinPayload joinPayload, WebSocketSession session) {
-        Peer joinedPeer = lobbyService.join(joinPayload.getNickname());
+        PeerEntity joinedPeer = lobbyService.join(joinPayload.getNickname());
         session.getAttributes().put(PEER_ID.name(), joinedPeer.getId());
         connectionManager.add(session);
     }
@@ -73,11 +74,11 @@ public class LobbyServiceFacade {
         };
     }
 
-    public Set<PeerDTO> getPeerDtos() {
+    public List<PeerDTO> getPeerDtos() {
         return lobbyService
                 .getConnectedPeers()
                 .stream()
                 .map(PeerDTO::from)
-                .collect(Collectors.toSet());
+                .toList();
     }
 }

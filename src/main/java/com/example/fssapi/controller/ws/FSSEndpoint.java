@@ -2,7 +2,10 @@ package com.example.fssapi.controller.ws;
 
 import com.example.fssapi.config.FSSWebSocketHandler;
 import com.example.fssapi.model.JoinPayload;
+import com.example.fssapi.model.TransferRequestPayload;
+import com.example.fssapi.model.TransferResponsePayload;
 import com.example.fssapi.service.LobbyServiceFacade;
+import com.example.fssapi.service.TransferServiceFacade;
 import com.example.fssapi.service.WebSocketConnectionManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +18,7 @@ import org.springframework.web.socket.WebSocketSession;
 @Slf4j
 public class FSSEndpoint extends FSSWebSocketHandler {
     private final LobbyServiceFacade lobbyServiceFacade;
-    private final WebSocketConnectionManager webSocketConnectionManager;
+    private final TransferServiceFacade transferServiceFacade;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -30,6 +33,16 @@ public class FSSEndpoint extends FSSWebSocketHandler {
     @Override
     protected void handleLeave(WebSocketSession session) {
         lobbyServiceFacade.handleLeave(session);
+    }
+
+    @Override
+    protected void handleTransferRequest(WebSocketSession session, TransferRequestPayload transferRequestPayload) {
+        transferServiceFacade.initiateTransfer(transferRequestPayload, session);
+    }
+
+    @Override
+    protected void handleTransferResponse(WebSocketSession session, TransferResponsePayload transferResponsePayload) {
+        transferServiceFacade.handleTransferResponse(transferResponsePayload, session);
     }
 
     @Override

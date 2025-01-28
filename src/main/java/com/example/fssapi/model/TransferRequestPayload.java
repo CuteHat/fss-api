@@ -17,13 +17,13 @@ public class TransferRequestPayload extends ActionBasedPayload {
     @NotEmpty
     private String filename;
     @NotNull
-    private Long size; // in bytes
+    private Long filesize; // in bytes
 
-    public TransferRequestPayload(UUID destinationId, String filename, Long size) {
+    public TransferRequestPayload(UUID destinationId, String filename, Long filesize) {
         this.setAction(FSSAction.REQUEST_TRANSFER);
         this.destinationId = destinationId;
         this.filename = filename;
-        this.size = size;
+        this.filesize = filesize;
     }
 
 }

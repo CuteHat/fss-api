@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -27,7 +28,11 @@ public class WebSocketConnectionManager {
     }
 
     public WebSocketSession getSessionByPeerId(UUID peerId) {
-        return sessions.get(peerId);
+        return this.getSessionByPeerIdOpt(peerId).orElseThrow();
+    }
+
+    public Optional<WebSocketSession> getSessionByPeerIdOpt(UUID peerId) {
+        return Optional.ofNullable(sessions.get(peerId));
     }
 
     private static UUID getPeerIdFrom(WebSocketSession session) {
